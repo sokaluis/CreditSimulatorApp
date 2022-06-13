@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { formattedAmount } from '../helpers/formattedAmount';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// Components
 import SimulatorSlider from './SimulatorSlider';
 
 const Simulator = () => {
@@ -80,12 +81,12 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   simulatorResultTitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#fff',
     textTransform: 'uppercase',
   },
   simulatorResultValue: {
-    fontSize: 18,
+    fontSize: 25,
     color: '#fff',
   },
   buttonContainer: {
