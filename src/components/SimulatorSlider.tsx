@@ -1,46 +1,99 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Slider } from '@miblanchard/react-native-slider';
+// Core
+import { formattedAmount, unFormattedAmount } from '../helpers/formattedAmount';
 
 interface SimulatorItemProps {
   title: string;
-  amount: string | number;
   onAmountChange: (value: number) => void;
   dynamicValue: number;
   minAmount: string;
   maxAmount: string;
+  notACurrency?: boolean;
 }
 
 const SimulatorSlider = ({
   title,
-  amount,
   dynamicValue,
   onAmountChange,
   minAmount,
   maxAmount,
-}: SimulatorItemProps) => (
-  <>
-    <View style={styles.simulatorItemTitle}>
-      <Text style={styles.simulatorItemTotalAmount}>{title}</Text>
-      <Text style={styles.simulatorItemValue}>{amount}</Text>
-    </View>
-    <View style={styles.simulatorSlider}>
-      <Slider
-        value={dynamicValue}
-        onValueChange={value => onAmountChange(Number(value))}
-        maximumValue={5000}
-        minimumValue={0}
-        thumbTouchSize={{ width: 50, height: 50 }}
-        containerStyle={styles.slider}
-        step={10}
-      />
-      <View style={styles.sliderRange}>
-        <Text style={styles.rangeValues}>{minAmount}</Text>
-        <Text style={styles.rangeValues}>{maxAmount}</Text>
+  notACurrency,
+  ...props
+}: SimulatorItemProps) => {
+  const totalAmount = formattedAmount(dynamicValue);
+  const [inputValue, setInputValue] = useState<string>(totalAmount);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  const onChangeInput = (value: string) => {
+    if (value.length === 1 && !notACurrency) {
+      console.log('onChangeInput', value);
+      setInputValue(`$${value}`);
+    } else {
+      setInputValue(value);
+    }
+    if (isEditing) {
+      setInputValue(Number(value).toFixed(0));
+    }
+    onAmountChange(unFormattedAmount(value));
+  };
+
+  const onFocusInput = () => {
+    setIsEditing(true);
+    if (notACurrency) {
+      return setInputValue(dynamicValue.toString());
+    }
+    setInputValue(totalAmount);
+  };
+
+  const onBlurInput = () => {
+    if (notACurrency) {
+      return setInputValue(dynamicValue.toString());
+    }
+    setInputValue(totalAmount);
+    setIsEditing(false);
+  };
+
+  useEffect(() => {
+    setInputValue(totalAmount);
+  }, [totalAmount]);
+
+  return (
+    <>
+      <View style={styles.simulatorItemTitle}>
+        <Text style={styles.simulatorItemTotalAmount}>{title}</Text>
+        <TextInput
+          value={notACurrency ? dynamicValue.toFixed(0).toString() : inputValue}
+          onChangeText={onChangeInput}
+          onFocus={onFocusInput}
+          onBlur={onBlurInput}
+          style={styles.simulatorItemValue}
+          keyboardType="numeric"
+        />
       </View>
-    </View>
-  </>
-);
+      <View style={styles.simulatorSlider}>
+        <Slider
+          value={dynamicValue}
+          onValueChange={value => onAmountChange(Number(value))}
+          thumbTouchSize={{ width: 50, height: 50 }}
+          containerStyle={styles.slider}
+          maximumValue={
+            !notACurrency ? unFormattedAmount(maxAmount) : Number(maxAmount)
+          }
+          minimumValue={
+            !notACurrency ? unFormattedAmount(minAmount) : Number(minAmount)
+          }
+          {...props}
+        />
+        <View style={styles.sliderRange}>
+          <Text style={styles.rangeValues}>{minAmount}</Text>
+          <Text style={styles.rangeValues}>{maxAmount}</Text>
+        </View>
+      </View>
+    </>
+  );
+};
 
 const styles = StyleSheet.create({
   simulatorItemTitle: {
